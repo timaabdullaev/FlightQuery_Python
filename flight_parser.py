@@ -73,6 +73,7 @@ def main(argv: list[str] | None = None) -> int:
 
     db: list[dict] = []
 
+#AI GENERATED BLOCK
     if args.input_json is not None:
         json_path = Path(args.input_json)
         if not json_path.is_file():
@@ -141,6 +142,7 @@ def main(argv: list[str] | None = None) -> int:
         finally:
             logger.removeHandler(handler)
             handler.close()
+#MY OWN BLOCK
 
     if args.query_file is not None:
         query_path = Path(args.query_file)

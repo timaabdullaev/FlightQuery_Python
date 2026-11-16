@@ -83,7 +83,8 @@ def run_query(db: list[dict], query: dict) -> dict:
     """
     if not _validate_query(query):
         return {"query": query, "error": "INVALID_QUERY", "matches": []}
-
+    
+#AI GENERATED BLOCK
     matches = []
     for record in db:
         match = True
@@ -113,6 +114,7 @@ def run_query(db: list[dict], query: dict) -> dict:
         if match:
             matches.append(record)
 
+#MY OWN BLOCK
     if "sort_by" in query:
         sort_key = query["sort_by"]
         reverse = query.get("order") == "desc"
@@ -123,7 +125,7 @@ def run_query(db: list[dict], query: dict) -> dict:
 
     return {"query": query, "matches": matches}
 
-
+#MY OWN BLOCK
 def run_queries(db: list[dict], queries: dict | list) -> list[dict]:
     """Accept one query object or a list of them; always return a list."""
     if isinstance(queries, dict):
