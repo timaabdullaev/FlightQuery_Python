@@ -17,6 +17,7 @@ _RECORD_KEYS = {
 
 _ALLOWED_KEYS = _RECORD_KEYS | {"min_price", "sort_by", "order", "limit"}
 
+
 def _is_valid_datetime(value: object) -> bool:
     if not isinstance(value, str) or not _DATETIME_RE.fullmatch(value):
         return False
@@ -26,13 +27,16 @@ def _is_valid_datetime(value: object) -> bool:
     except ValueError:
         return False
 
+
 def _is_number(value: object) -> bool:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return False
     return math.isfinite(float(value))
 
+
 def _is_int(value: object) -> bool:
     return not isinstance(value, bool) and isinstance(value, int)
+
 
 def _validate_query(query: object) -> bool:
     if not isinstance(query, dict):
@@ -70,13 +74,13 @@ def _validate_query(query: object) -> bool:
 
     return True
 
+
 def run_query(db: list[dict], query: dict) -> dict:
     """Return one response entry for one query object.
 
     Valid query:   {"query": query, "matches": [...]}
     Invalid query: {"query": query, "error": "INVALID_QUERY", "matches": []}
     """
-    #AI GENERATED BLOCK
     if not _validate_query(query):
         return {"query": query, "error": "INVALID_QUERY", "matches": []}
 
@@ -90,30 +94,38 @@ def run_query(db: list[dict], query: dict) -> dict:
                 if record["price"] < val:
                     match = False
                     break
+            elif key == "price":
+                if record["price"] > val:
+                    match = False
+                    break
+            elif key == "departure_datetime":
+                if record["departure_datetime"] < val:
+                    match = False
+                    break
+            elif key == "arrival_datetime":
+                if record["arrival_datetime"] > val:
+                    match = False
+                    break
             else:
-                if record.get(key) != val:
+                if record[key] != val:
                     match = False
                     break
         if match:
             matches.append(record)
 
-    # Sorting
     if "sort_by" in query:
         sort_key = query["sort_by"]
         reverse = query.get("order") == "desc"
-        matches.sort(key=lambda r: r[sort_key], reverse=reverse)
+        matches = sorted(matches, key=lambda r: r[sort_key], reverse=reverse)
 
-    # Limiting
     if "limit" in query:
-        limit = query["limit"]
-        matches = matches[:limit]
+        matches = matches[: query["limit"]]
 
     return {"query": query, "matches": matches}
 
-    #MY OWN BLOCK
+
 def run_queries(db: list[dict], queries: dict | list) -> list[dict]:
     """Accept one query object or a list of them; always return a list."""
-    
     if isinstance(queries, dict):
         return [run_query(db, queries)]
     return [run_query(db, q) for q in queries]
