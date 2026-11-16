@@ -1,0 +1,1085 @@
+=== .devcontainer/devcontainer.json ===
+{
+  "name": "Flight lab (Python 3.13)",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.13-bookworm",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python"]
+    }
+  }
+}
+
+
+=== .gitignore ===
+__pycache__/
+*.pyc
+db.json
+errors.log
+response_*.json
+
+
+=== AI_USAGE.md ===
+# AI Usage Disclosure
+
+<!--
+Fill in this file before you submit. Submissions without it are not graded.
+If you used no AI tools, delete everything below and write only:
+No AI tools were used.
+-->
+
+## Tools used
+
+- Tool and version (e.g. ChatGPT GPT-5, Claude, GitHub Copilot):
+
+## Conversation links
+
+- Link 1:
+- Link 2:
+
+## What I used them for
+
+- e.g. explaining argparse, debugging the date validation, generating test data
+
+## Which parts of the code were AI-generated or substantially AI-assisted
+
+| File | Function or part | How (generated / modified / explained) |
+| --- | --- | --- |
+|  |  |  |
+
+## Key prompts
+
+1.
+2.
+
+## What I changed or verified myself
+
+
+
+=== README.md ===
+# Flight Schedule Parser and Query Tool: starter files
+
+This folder is the starting point for the graded lab. The full rules are in
+the assignment description on Moodle; this file only explains what is here.
+
+## What is in this folder
+
+| Path | What it is |
+| --- | --- |
+| `flight_parser.py` | Entry point with `main()` and your student constants. **Edit.** |
+| `validator.py` | `load_airports`, `validate_row`, `to_record`. **Edit.** |
+| `csv_loader.py` | `parse_files`. **Edit.** |
+| `query.py` | `run_query`, `run_queries`. **Edit.** |
+| `AI_USAGE.md` | Your AI use disclosure. **Fill in before submitting.** |
+| `data/db.csv` | The sample file from the worked example (7 valid rows, 12 invalid). |
+| `data/airports.txt` | The airport list to pass with `-a`. |
+| `data/query.json` | The sample queries from the worked example. |
+| `data/flights/` | A folder for testing `-d`. One of its files uses Windows line endings, one has only a header, and the `.txt` file and the `archive/` sub-folder must be ignored. |
+| `tests/run_public_tests.py` | The public test script. Do not edit. |
+| `tests/expected/` | Expected outputs used by the tests. Do not edit. |
+| `.devcontainer/` | Codespaces setup (Python 3.13). Do not edit. |
+
+The function names and signatures in the four `.py` files are fixed, because
+the autograder calls them directly. Replace the `raise NotImplementedError`
+lines with your code. You may add more functions, classes and modules.
+
+## Getting started
+
+1. Create your own **private** repository from the starter template and
+   open it in GitHub Codespaces. The `.devcontainer` folder sets the
+   codespace up with Python 3.13; check with `python --version`.
+2. Add your instructor as a collaborator (Settings > Collaborators) so the
+   grader can read your repository.
+3. Set `STUDENT_ID`, `FIRST_NAME` and `LAST_NAME` in `flight_parser.py`.
+4. Start with `validator.py`; the tests in group B check it on its own.
+5. Run your program from the project folder, for example:
+
+   ```
+   python flight_parser.py -i data/db.csv -a data/airports.txt
+   python flight_parser.py -d data/flights -a data/airports.txt -o out/db.json
+   python flight_parser.py -j db.json -q data/query.json
+   ```
+
+   The `out/` folder must exist before you use it with `-o`.
+
+## Running the public tests
+
+From this folder:
+
+```
+python tests/run_public_tests.py
+```
+
+The output lists every test and ends with a summary per grading group (A–H).
+A failing test prints what it expected and what it got. Passing every public
+test does not guarantee full points: the final grade uses a larger hidden test
+set with different data.
+
+## Submitting
+
+Commit and push your work, then submit your repository URL on Moodle before
+the deadline. The four `.py` files and `AI_USAGE.md` must be in the
+repository root. Late submissions are not accepted, and only commits pushed
+before the deadline are graded.
+
+The `.gitignore` keeps generated files (`db.json`, `errors.log`,
+`response_*.json`) out of your repository.
+
+
+=== csv_loader.py ===
+"""Reading CSV files into flight records and error messages."""
+
+
+def parse_files(paths: list[str], airports: set[str]) -> tuple[list[dict], list[str]]:
+    """Process the CSV files in the order given.
+
+    Return (records, errors):
+      records - valid flight records, in input order
+      errors  - one message per invalid row, in input order, formatted as
+                "<file name>:<line number>: <ERROR_CODE> | <free text>"
+                (base file name only, no timestamp or level, no newline)
+
+    Also performs the DUPLICATE_FLIGHT check across all the files.
+    Does not write any files and does not log anything itself.
+    """
+    raise NotImplementedError
+
+
+=== data/airports.txt ===
+AMS
+ARN
+BRU
+CDG
+DOH
+DXB
+FRA
+HEL
+JFK
+LAX
+LHR
+OSL
+RIX
+SYD
+WAW
+
+
+=== data/db.csv ===
+flight_id,origin,destination,departure_datetime,arrival_datetime,price
+# === Valid flights ===
+BA2490,LHR,JFK,2025-11-14 10:30,2025-11-14 13:05,489.99
+LH172,FRA,RIX,2025-11-12 07:15,2025-11-12 10:30,159.50
+FR1234,RIX,OSL,2025-11-15 08:00,2025-11-15 08:55,99.99
+BT102,RIX,HEL,2025-11-14 09:40,2025-11-14 10:25,120.00
+AA9999,JFK,LHR,2025-11-15 20:15,2025-11-16 08:10,550.00
+DY4501,OSL,ARN,2025-12-01 06:00,2025-12-01 07:10,75.00
+AF112,CDG,DXB,2025-11-20 21:10,2025-11-21 05:45,620.00
+
+# === Invalid flights ===
+BADLINE,NO_DATE,NO_TIME
+BA_BAD,RIX,LON,2025-11-15 11:00,INVALID_DATE,250.00
+SK404,OSL,RIX,2025-11-15 14:00,2025-11-15 12:00,120.00
+W61025,XXX,RIX,2025-11-16 11:00,2025-11-16 13:00,80.00
+QR1,DOH,SYD,INVALID_DATETIME,2025-11-17 23:30,980.00
+KL1999,AMS,,2025-11-14 09:00,2025-11-14 11:15,180.00
+AY503,HEL,RIX,2025-11-15 13:20,2025-11-15 14:15,-10.00
+LH999999999,FRA,LAX,2025-11-13 09:30,2025-11-13 18:10,700.00
+SN2902,BRU,LHR,2025-13-40 10:00,2025-13-40 12:00,99.99
+BT650,RIX,RIX,2025-11-18 07:00,2025-11-18 08:00,60.00
+FR1234,RIX,OSL,2025-11-15 08:00,2025-11-15 08:55,89.99
+LO780,WAW,RIX,2025-11-19 16:00,2025-11-19 18:05,abc
+
+
+=== data/flights/a_riga.csv ===
+flight_id,origin,destination,departure_datetime,arrival_datetime,price
+# Departures from Riga
+BT301, RIX , HEL ,2025-11-20 07:05,2025-11-20 07:55, 89.00
+BT311,RIX,ARN,2025-11-20 09:30,2025-11-20 10:20,110.50
+BT321,RIX,AMS,2025-11-20 25:00,2025-11-20 13:10,150.00
+BT331,RIX,CDG,2025-11-21 06:40,2025-11-21 08:15,0
+
+
+=== data/flights/archive/old.csv ===
+flight_id,origin,destination,departure_datetime,arrival_datetime,price
+OLD1,RIX,HEL,2024-01-01 10:00,2024-01-01 11:00,50.00
+
+
+=== data/flights/b_oslo.csv ===
+flight_id,origin,destination,departure_datetime,arrival_datetime,price
+# Departures from Oslo (this file uses Windows line endings)
+DY1001,OSL,RIX,2025-11-20 12:00,2025-11-20 14:45,95.00
+
+BT301,RIX,HEL,2025-11-20 07:05,2025-11-20 07:55,79.00
+BT301,RIX,HEL,2025-11-21 07:05,2025-11-21 07:55,79.00
+DY1002,OSL,osl,2025-11-20 15:00,2025-11-20 16:00,60.00
+DY1003,OSL,ARN,2025-11-20 18:00,2025-11-20 19:05,70.00,extra
+DY1004,OSL,FRA,2025-11-21 08:00,2025-11-21 10:10,inf
+"DY1005","OSL","LHR","2025-11-21 09:00","2025-11-21 10:55","130.00"
+
+
+=== data/flights/c_empty.csv ===
+flight_id,origin,destination,departure_datetime,arrival_datetime,price
+
+
+=== data/flights/notes.txt ===
+These notes are not a CSV file and must be ignored.
+
+
+=== data/query.json ===
+[
+  { "origin": "LHR", "destination": "JFK" },
+  { "price": 200.00 },
+  { "departure_datetime": "2025-11-15 00:00", "arrival_datetime": "2025-11-16 00:00" },
+  { "origin": "RIX", "sort_by": "price", "order": "desc", "limit": 1 },
+  { "destination": "XYZ", "colour": "red" }
+]
+
+
+=== flight_parser.py ===
+"""Flight Schedule Parser and Query Tool - command-line entry point.
+
+Run from the project folder, for example:
+    python flight_parser.py -i data/db.csv -a data/airports.txt
+"""
+import sys
+
+# TODO: fill in your details: plain ASCII, no spaces or underscores.
+STUDENT_ID = "000RDB000"
+FIRST_NAME = "Firstname"
+LAST_NAME = "Lastname"
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the whole program and return the exit code (0, 1 or 2).
+
+    argv is the argument list without the program name.
+    None means use sys.argv[1:] (argparse does this for you).
+    Do not call sys.exit() inside main(); return the code instead.
+    """
+    # TODO: parse arguments with argparse (-i, -d, -j, -a, -o, -q, -r).
+    # TODO: load or parse the data, write the database and errors.log.
+    # TODO: run the queries and write the response file.
+    # Remember: remove and close the logging handler before returning,
+    # also when returning early because of an error (use try/finally).
+    raise NotImplementedError("main() is not written yet")
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+=== query.py ===
+"""Running queries against the flight database."""
+
+
+def run_query(db: list[dict], query: dict) -> dict:
+    """Return one response entry for one query object.
+
+    Valid query:   {"query": query, "matches": [...]}
+    Invalid query: {"query": query, "error": "INVALID_QUERY", "matches": []}
+    """
+    raise NotImplementedError
+
+
+def run_queries(db: list[dict], queries: dict | list) -> list[dict]:
+    """Accept one query object or a list of them; always return a list."""
+    raise NotImplementedError
+
+
+=== tests/expected/db.json ===
+[
+  {
+    "flight_id": "BA2490",
+    "origin": "LHR",
+    "destination": "JFK",
+    "departure_datetime": "2025-11-14 10:30",
+    "arrival_datetime": "2025-11-14 13:05",
+    "price": 489.99
+  },
+  {
+    "flight_id": "LH172",
+    "origin": "FRA",
+    "destination": "RIX",
+    "departure_datetime": "2025-11-12 07:15",
+    "arrival_datetime": "2025-11-12 10:30",
+    "price": 159.5
+  },
+  {
+    "flight_id": "FR1234",
+    "origin": "RIX",
+    "destination": "OSL",
+    "departure_datetime": "2025-11-15 08:00",
+    "arrival_datetime": "2025-11-15 08:55",
+    "price": 99.99
+  },
+  {
+    "flight_id": "BT102",
+    "origin": "RIX",
+    "destination": "HEL",
+    "departure_datetime": "2025-11-14 09:40",
+    "arrival_datetime": "2025-11-14 10:25",
+    "price": 120.0
+  },
+  {
+    "flight_id": "AA9999",
+    "origin": "JFK",
+    "destination": "LHR",
+    "departure_datetime": "2025-11-15 20:15",
+    "arrival_datetime": "2025-11-16 08:10",
+    "price": 550.0
+  },
+  {
+    "flight_id": "DY4501",
+    "origin": "OSL",
+    "destination": "ARN",
+    "departure_datetime": "2025-12-01 06:00",
+    "arrival_datetime": "2025-12-01 07:10",
+    "price": 75.0
+  },
+  {
+    "flight_id": "AF112",
+    "origin": "CDG",
+    "destination": "DXB",
+    "departure_datetime": "2025-11-20 21:10",
+    "arrival_datetime": "2025-11-21 05:45",
+    "price": 620.0
+  }
+]
+
+=== tests/expected/db_errors.txt ===
+db.csv:12: WRONG_FIELD_COUNT
+db.csv:13: INVALID_FLIGHT_ID
+db.csv:14: ARRIVAL_NOT_AFTER_DEPARTURE
+db.csv:15: INVALID_ORIGIN
+db.csv:16: INVALID_DEPARTURE
+db.csv:17: MISSING_FIELD
+db.csv:18: NON_POSITIVE_PRICE
+db.csv:19: INVALID_FLIGHT_ID
+db.csv:20: INVALID_DEPARTURE
+db.csv:21: SAME_ORIGIN_DESTINATION
+db.csv:22: DUPLICATE_FLIGHT
+db.csv:23: INVALID_PRICE
+
+
+=== tests/expected/flights_db.json ===
+[
+  {
+    "flight_id": "BT301",
+    "origin": "RIX",
+    "destination": "HEL",
+    "departure_datetime": "2025-11-20 07:05",
+    "arrival_datetime": "2025-11-20 07:55",
+    "price": 89.0
+  },
+  {
+    "flight_id": "BT311",
+    "origin": "RIX",
+    "destination": "ARN",
+    "departure_datetime": "2025-11-20 09:30",
+    "arrival_datetime": "2025-11-20 10:20",
+    "price": 110.5
+  },
+  {
+    "flight_id": "DY1001",
+    "origin": "OSL",
+    "destination": "RIX",
+    "departure_datetime": "2025-11-20 12:00",
+    "arrival_datetime": "2025-11-20 14:45",
+    "price": 95.0
+  },
+  {
+    "flight_id": "BT301",
+    "origin": "RIX",
+    "destination": "HEL",
+    "departure_datetime": "2025-11-21 07:05",
+    "arrival_datetime": "2025-11-21 07:55",
+    "price": 79.0
+  },
+  {
+    "flight_id": "DY1005",
+    "origin": "OSL",
+    "destination": "LHR",
+    "departure_datetime": "2025-11-21 09:00",
+    "arrival_datetime": "2025-11-21 10:55",
+    "price": 130.0
+  }
+]
+
+=== tests/expected/flights_errors.txt ===
+a_riga.csv:5: INVALID_DEPARTURE
+a_riga.csv:6: NON_POSITIVE_PRICE
+b_oslo.csv:5: DUPLICATE_FLIGHT
+b_oslo.csv:7: INVALID_DESTINATION
+b_oslo.csv:8: WRONG_FIELD_COUNT
+b_oslo.csv:9: INVALID_PRICE
+
+
+=== tests/expected/query_response.json ===
+[
+  {
+    "query": {
+      "origin": "LHR",
+      "destination": "JFK"
+    },
+    "matches": [
+      {
+        "flight_id": "BA2490",
+        "origin": "LHR",
+        "destination": "JFK",
+        "departure_datetime": "2025-11-14 10:30",
+        "arrival_datetime": "2025-11-14 13:05",
+        "price": 489.99
+      }
+    ]
+  },
+  {
+    "query": {
+      "price": 200.0
+    },
+    "matches": [
+      {
+        "flight_id": "LH172",
+        "origin": "FRA",
+        "destination": "RIX",
+        "departure_datetime": "2025-11-12 07:15",
+        "arrival_datetime": "2025-11-12 10:30",
+        "price": 159.5
+      },
+      {
+        "flight_id": "FR1234",
+        "origin": "RIX",
+        "destination": "OSL",
+        "departure_datetime": "2025-11-15 08:00",
+        "arrival_datetime": "2025-11-15 08:55",
+        "price": 99.99
+      },
+      {
+        "flight_id": "BT102",
+        "origin": "RIX",
+        "destination": "HEL",
+        "departure_datetime": "2025-11-14 09:40",
+        "arrival_datetime": "2025-11-14 10:25",
+        "price": 120.0
+      },
+      {
+        "flight_id": "DY4501",
+        "origin": "OSL",
+        "destination": "ARN",
+        "departure_datetime": "2025-12-01 06:00",
+        "arrival_datetime": "2025-12-01 07:10",
+        "price": 75.0
+      }
+    ]
+  },
+  {
+    "query": {
+      "departure_datetime": "2025-11-15 00:00",
+      "arrival_datetime": "2025-11-16 00:00"
+    },
+    "matches": [
+      {
+        "flight_id": "FR1234",
+        "origin": "RIX",
+        "destination": "OSL",
+        "departure_datetime": "2025-11-15 08:00",
+        "arrival_datetime": "2025-11-15 08:55",
+        "price": 99.99
+      }
+    ]
+  },
+  {
+    "query": {
+      "origin": "RIX",
+      "sort_by": "price",
+      "order": "desc",
+      "limit": 1
+    },
+    "matches": [
+      {
+        "flight_id": "BT102",
+        "origin": "RIX",
+        "destination": "HEL",
+        "departure_datetime": "2025-11-14 09:40",
+        "arrival_datetime": "2025-11-14 10:25",
+        "price": 120.0
+      }
+    ]
+  },
+  {
+    "query": {
+      "destination": "XYZ",
+      "colour": "red"
+    },
+    "error": "INVALID_QUERY",
+    "matches": []
+  }
+]
+
+=== tests/run_public_tests.py ===
+"""Public tests for the Flight Schedule Parser and Query Tool.
+
+Run from your project folder:
+
+    python tests/run_public_tests.py
+
+The groups match the grading groups A-H in the assignment. Passing every
+public test does NOT guarantee full points: the final grade uses a larger
+hidden test set with different data. Do not edit this file or the files in
+tests/expected/.
+"""
+import ast
+import contextlib
+import importlib
+import io
+import json
+import logging
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+DATA = ROOT / "data"
+EXPECTED = Path(__file__).resolve().parent / "expected"
+DB_CSV = DATA / "db.csv"
+AIRPORTS = DATA / "airports.txt"
+FLIGHTS = DATA / "flights"
+TIMEOUT = 10
+
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+AIRPORT_SET = {"AMS", "ARN", "BRU", "CDG", "DOH", "DXB", "FRA", "HEL", "JFK",
+               "LAX", "LHR", "OSL", "RIX", "SYD", "WAW"}
+LOG_LINE_RE = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} (DEBUG|INFO|WARNING|ERROR|CRITICAL) ")
+WARNING_RE = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} WARNING (\S+:\d+: [A-Z_]+)(?: \|.*)?$")
+
+
+# ---------------------------------------------------------------- helpers
+
+def load_module(name):
+    return importlib.import_module(name)
+
+
+def run_cli(args, cwd):
+    """Run flight_parser.py as a separate process."""
+    return subprocess.run(
+        [sys.executable, str(ROOT / "flight_parser.py"), *[str(a) for a in args]],
+        cwd=str(cwd), capture_output=True, text=True, timeout=TIMEOUT,
+    )
+
+
+def read_json(path):
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def expected_lines(name):
+    return (EXPECTED / name).read_text(encoding="utf-8").splitlines()
+
+
+def graded_log(path):
+    """The graded part of every WARNING line in a log file."""
+    out = []
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
+        m = WARNING_RE.match(line)
+        if m:
+            out.append(m.group(1))
+    return out
+
+
+def graded_message(message):
+    """The graded part of a message returned by parse_files()."""
+    return message.split(" | ", 1)[0].rstrip(" |")
+
+
+def ids(entries):
+    return [r["flight_id"] for r in entries]
+
+
+class TempDirTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="flightlab_"))
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def assertCleanExit(self, proc, code):
+        self.assertNotIn("Traceback", proc.stderr, "the program crashed with a traceback:\n" + proc.stderr)
+        self.assertEqual(proc.returncode, code,
+                         f"expected exit code {code}, got {proc.returncode}\nstderr:\n{proc.stderr}")
+
+
+# ---------------------------------------------------------------- A. Structure
+
+class A_Structure(unittest.TestCase):
+    FILES = ["flight_parser.py", "validator.py", "csv_loader.py", "query.py", "AI_USAGE.md"]
+
+    def test_required_files_exist(self):
+        for name in self.FILES:
+            with self.subTest(file=name):
+                self.assertTrue((ROOT / name).is_file(), f"{name} is missing from the project root")
+
+    def test_ai_usage_not_empty(self):
+        path = ROOT / "AI_USAGE.md"
+        self.assertTrue(path.is_file() and path.read_text(encoding="utf-8").strip(),
+                        "AI_USAGE.md is missing or empty")
+
+    def test_imports_are_silent(self):
+        proc = subprocess.run(
+            [sys.executable, "-c", "import flight_parser, validator, csv_loader, query"],
+            cwd=str(ROOT), capture_output=True, text=True, timeout=TIMEOUT)
+        self.assertEqual(proc.returncode, 0, "importing your modules failed:\n" + proc.stderr)
+        self.assertEqual(proc.stdout + proc.stderr, "", "importing your modules must not print anything")
+
+    def test_required_functions_exist(self):
+        required = {
+            "flight_parser": ["main"],
+            "validator": ["load_airports", "validate_row", "to_record"],
+            "csv_loader": ["parse_files"],
+            "query": ["run_query", "run_queries"],
+        }
+        for module, funcs in required.items():
+            mod = load_module(module)
+            for func in funcs:
+                with self.subTest(function=f"{module}.{func}"):
+                    self.assertTrue(callable(getattr(mod, func, None)), f"{module}.{func} is missing")
+
+    def test_student_constants(self):
+        fp = load_module("flight_parser")
+        placeholders = {"STUDENT_ID": "000RDB000", "FIRST_NAME": "Firstname", "LAST_NAME": "Lastname"}
+        for name, placeholder in placeholders.items():
+            with self.subTest(constant=name):
+                value = getattr(fp, name, None)
+                self.assertIsInstance(value, str, f"{name} must be a string")
+                self.assertTrue(value and value.isascii(), f"{name} must be non-empty plain ASCII")
+                self.assertNotRegex(value, r"[\s_]", f"{name} must not contain spaces or underscores")
+                self.assertNotEqual(value, placeholder, f"set {name} to your own details")
+
+    def test_standard_library_only(self):
+        local = {p.stem for p in ROOT.glob("*.py")} | {p.name for p in ROOT.iterdir() if (p / "__init__.py").is_file()}
+        allowed = set(sys.stdlib_module_names) | local
+        for path in ROOT.glob("*.py"):
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            for node in ast.walk(tree):
+                names = []
+                if isinstance(node, ast.Import):
+                    names = [a.name for a in node.names]
+                elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                    names = [node.module]
+                for n in names:
+                    with self.subTest(file=path.name, module=n):
+                        self.assertIn(n.split(".")[0], allowed, f"{path.name} imports non-standard module {n}")
+
+
+# ---------------------------------------------------------------- B. Row validation
+
+GOOD = ["BA2490", "LHR", "JFK", "2025-11-14 10:30", "2025-11-14 13:05", "489.99"]
+
+
+def row(**changes):
+    keys = ["flight_id", "origin", "destination", "dep", "arr", "price"]
+    fields = list(GOOD)
+    for k, v in changes.items():
+        fields[keys.index(k)] = v
+    return fields
+
+
+class B_RowValidation(TempDirTest):
+    CASES = [
+        ("valid row", GOOD, None),
+        ("whitespace around fields is stripped", [" BA2490 ", " LHR", "JFK ", " 2025-11-14 10:30", "2025-11-14 13:05 ", " 489.99 "], None),
+        ("integer price", row(price="120"), None),
+        ("too few fields", GOOD[:5], "WRONG_FIELD_COUNT"),
+        ("too many fields", GOOD + ["extra"], "WRONG_FIELD_COUNT"),
+        ("empty destination", row(destination=""), "MISSING_FIELD"),
+        ("whitespace-only price", row(price="   "), "MISSING_FIELD"),
+        ("underscore in flight id", row(flight_id="BA_BAD"), "INVALID_FLIGHT_ID"),
+        ("flight id too long", row(flight_id="LH9999999"), "INVALID_FLIGHT_ID"),
+        ("flight id too short", row(flight_id="B"), "INVALID_FLIGHT_ID"),
+        ("non-ASCII flight id", row(flight_id="ĀB12"), "INVALID_FLIGHT_ID"),
+        ("origin not in airport list", row(origin="XXX"), "INVALID_ORIGIN"),
+        ("lowercase origin", row(origin="lhr"), "INVALID_ORIGIN"),
+        ("destination not in airport list", row(destination="LON"), "INVALID_DESTINATION"),
+        ("same origin and destination", row(destination="LHR"), "SAME_ORIGIN_DESTINATION"),
+        ("departure not zero-padded", row(dep="2025-11-4 9:30"), "INVALID_DEPARTURE"),
+        ("departure on a day that does not exist", row(dep="2025-02-30 10:00"), "INVALID_DEPARTURE"),
+        ("departure with T separator", row(dep="2025-11-14T10:30"), "INVALID_DEPARTURE"),
+        ("arrival hour 24", row(arr="2025-11-14 24:00"), "INVALID_ARRIVAL"),
+        ("arrival equal to departure", row(arr="2025-11-14 10:30"), "ARRIVAL_NOT_AFTER_DEPARTURE"),
+        ("arrival before departure", row(arr="2025-11-13 23:59"), "ARRIVAL_NOT_AFTER_DEPARTURE"),
+        ("price is text", row(price="abc"), "INVALID_PRICE"),
+        ("price is nan", row(price="nan"), "INVALID_PRICE"),
+        ("price is zero", row(price="0"), "NON_POSITIVE_PRICE"),
+        ("price is negative", row(price="-0.01"), "NON_POSITIVE_PRICE"),
+        ("check order: flight id before destination and arrival",
+         ["BA_BAD", "RIX", "LON", "2025-11-15 11:00", "INVALID_DATE", "250.00"], "INVALID_FLIGHT_ID"),
+        ("check order: origin before dates and price", ["XX1", "XXX", "RIX", "bad", "bad", "-1"], "INVALID_ORIGIN"),
+        ("check order: departure before arrival", row(dep="bad", arr="bad"), "INVALID_DEPARTURE"),
+    ]
+
+    def test_validate_row(self):
+        validate_row = load_module("validator").validate_row
+        for name, fields, expected in self.CASES:
+            with self.subTest(case=name, fields=fields):
+                self.assertEqual(validate_row(list(fields), AIRPORT_SET), expected)
+
+    def test_to_record(self):
+        to_record = load_module("validator").to_record
+        record = to_record([" BA2490", "LHR ", "JFK", "2025-11-14 10:30", "2025-11-14 13:05", " 489.99"])
+        self.assertEqual(record, {"flight_id": "BA2490", "origin": "LHR", "destination": "JFK",
+                                  "departure_datetime": "2025-11-14 10:30",
+                                  "arrival_datetime": "2025-11-14 13:05", "price": 489.99})
+        self.assertIsInstance(record["price"], float)
+
+    def test_load_airports(self):
+        load_airports = load_module("validator").load_airports
+        path = self.tmp / "airports.txt"
+        path.write_text("# comment\nRIX\n\n  HEL  \nOSL\n   \n", encoding="utf-8")
+        self.assertEqual(load_airports(str(path)), {"RIX", "HEL", "OSL"})
+
+
+# ---------------------------------------------------------------- C. Parsing a file
+
+class C_ParsingAFile(TempDirTest):
+    def run_sample(self, csv_path=DB_CSV):
+        proc = run_cli(["-i", csv_path, "-a", AIRPORTS, "-o", self.tmp / "db.json"], self.tmp)
+        self.assertCleanExit(proc, 0)
+        return proc
+
+    def test_database_matches_expected(self):
+        self.run_sample()
+        self.assertEqual(read_json(self.tmp / "db.json"), read_json(EXPECTED / "db.json"))
+
+    def test_errors_log_matches_expected(self):
+        self.run_sample()
+        self.assertTrue((self.tmp / "errors.log").is_file(), "errors.log was not written next to the database")
+        self.assertEqual(graded_log(self.tmp / "errors.log"), expected_lines("db_errors.txt"))
+
+    def test_errors_log_line_format(self):
+        self.run_sample()
+        for line in (self.tmp / "errors.log").read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                with self.subTest(line=line):
+                    self.assertRegex(line, LOG_LINE_RE, "log lines must start 'YYYY-MM-DD HH:MM:SS LEVEL '")
+
+    def test_default_output_location(self):
+        proc = run_cli(["-i", DB_CSV, "-a", AIRPORTS], self.tmp)
+        self.assertCleanExit(proc, 0)
+        self.assertTrue((self.tmp / "db.json").is_file(), "without -o, db.json must go to the current directory")
+        self.assertTrue((self.tmp / "errors.log").is_file(), "errors.log must go next to db.json")
+
+    def test_windows_line_endings(self):
+        crlf = self.tmp / "db.csv"
+        crlf.write_bytes(DB_CSV.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+        self.run_sample(crlf)
+        self.assertEqual(read_json(self.tmp / "db.json"), read_json(EXPECTED / "db.json"))
+        self.assertEqual(graded_log(self.tmp / "errors.log"), expected_lines("db_errors.txt"))
+
+    def test_parse_files_function(self):
+        parse_files = load_module("csv_loader").parse_files
+        records, errors = parse_files([str(DB_CSV)], set(AIRPORT_SET))
+        self.assertEqual(records, read_json(EXPECTED / "db.json"))
+        self.assertEqual([graded_message(e) for e in errors], expected_lines("db_errors.txt"))
+        for e in errors:
+            self.assertFalse(e.endswith("\n"), "error messages must not end with a newline")
+
+    def test_main_twice_in_one_process(self):
+        main = load_module("flight_parser").main
+        logger = logging.getLogger("flight_parser")
+        for run in ("first", "second"):
+            out = self.tmp / run
+            out.mkdir()
+            with contextlib.redirect_stdout(io.StringIO()):
+                code = main(["-i", str(DB_CSV), "-a", str(AIRPORTS), "-o", str(out / "db.json")])
+            with self.subTest(run=run):
+                self.assertEqual(code, 0)
+                self.assertEqual(graded_log(out / "errors.log"), expected_lines("db_errors.txt"),
+                                 "duplicate or missing lines: is the handler removed at the end of main()?")
+                self.assertEqual(logger.handlers, [], "main() must remove its logging handler before returning")
+
+
+# ---------------------------------------------------------------- D. CLI and folders
+
+class D_CliAndFolders(TempDirTest):
+    def test_folder_mode(self):
+        proc = run_cli(["-d", FLIGHTS, "-a", AIRPORTS, "-o", self.tmp / "db.json"], self.tmp)
+        self.assertCleanExit(proc, 0)
+        self.assertEqual(read_json(self.tmp / "db.json"), read_json(EXPECTED / "flights_db.json"))
+        self.assertEqual(graded_log(self.tmp / "errors.log"), expected_lines("flights_errors.txt"))
+
+    def test_runtime_errors_exit_1(self):
+        empty = self.tmp / "empty"
+        empty.mkdir()
+        bad_json = self.tmp / "bad.json"
+        bad_json.write_text("[{not json", encoding="utf-8")
+        not_array = self.tmp / "object.json"
+        not_array.write_text('{"flight_id": "BA2490"}', encoding="utf-8")
+        cases = {
+            "missing CSV file": ["-i", self.tmp / "nope.csv", "-a", AIRPORTS],
+            "missing folder": ["-d", self.tmp / "nope", "-a", AIRPORTS],
+            "folder without .csv files": ["-d", empty, "-a", AIRPORTS],
+            "missing JSON database": ["-j", self.tmp / "nope.json"],
+            "database is not valid JSON": ["-j", bad_json],
+            "database is not an array": ["-j", not_array],
+            "query file is not valid JSON": ["-j", EXPECTED / "db.json", "-q", bad_json, "-r", self.tmp],
+        }
+        for name, args in cases.items():
+            with self.subTest(case=name):
+                proc = run_cli(args, self.tmp)
+                self.assertCleanExit(proc, 1)
+                self.assertTrue(any(l.startswith("Error:") for l in proc.stderr.splitlines()),
+                                "print a line starting with 'Error:' to stderr")
+
+    def test_usage_errors_exit_2(self):
+        cases = {
+            "no data source": [],
+            "two data sources": ["-i", DB_CSV, "-j", EXPECTED / "db.json", "-a", AIRPORTS],
+            "-i without -a": ["-i", DB_CSV],
+            "-d without -a": ["-d", FLIGHTS],
+            "-o with -j": ["-j", EXPECTED / "db.json", "-o", self.tmp / "x.json"],
+            "unknown argument": ["-i", DB_CSV, "-a", AIRPORTS, "--colour", "red"],
+        }
+        for name, args in cases.items():
+            with self.subTest(case=name):
+                self.assertCleanExit(run_cli(args, self.tmp), 2)
+
+
+# ---------------------------------------------------------------- E. Duplicates
+
+class E_Duplicates(TempDirTest):
+    HEADER = "flight_id,origin,destination,departure_datetime,arrival_datetime,price\n"
+
+    def test_duplicates_in_one_file(self):
+        csv_path = self.tmp / "dups.csv"
+        csv_path.write_text(self.HEADER +
+            "AB100,RIX,HEL,2025-11-20 08:00,2025-11-20 09:00,-5\n"      # invalid: does not count
+            "AB100,RIX,HEL,2025-11-20 08:00,2025-11-20 09:00,50\n"      # valid
+            "AB100,RIX,HEL,2025-11-20 08:00,2025-11-20 09:30,60\n"      # duplicate
+            "AB100,RIX,HEL,2025-11-21 08:00,2025-11-21 09:00,50\n",     # other day: valid
+            encoding="utf-8")
+        parse_files = load_module("csv_loader").parse_files
+        records, errors = parse_files([str(csv_path)], set(AIRPORT_SET))
+        self.assertEqual([r["price"] for r in records], [50.0, 50.0])
+        self.assertEqual([graded_message(e) for e in errors],
+                         ["dups.csv:2: NON_POSITIVE_PRICE", "dups.csv:4: DUPLICATE_FLIGHT"])
+
+    def test_duplicates_across_files(self):
+        parse_files = load_module("csv_loader").parse_files
+        paths = [str(FLIGHTS / n) for n in ("a_riga.csv", "b_oslo.csv")]
+        records, errors = parse_files(paths, set(AIRPORT_SET))
+        self.assertIn("b_oslo.csv:5: DUPLICATE_FLIGHT", [graded_message(e) for e in errors])
+        self.assertEqual(ids(records), ids(read_json(EXPECTED / "flights_db.json")))
+
+
+# ---------------------------------------------------------------- F. Basic queries
+
+class F_BasicQueries(TempDirTest):
+    def write_queries(self, queries):
+        path = self.tmp / "q.json"
+        path.write_text(json.dumps(queries), encoding="utf-8")
+        return path
+
+    def response(self):
+        files = list((self.tmp / "out").glob("response_*.json"))
+        self.assertEqual(len(files), 1, "expected exactly one response file")
+        return read_json(files[0])
+
+    def run_queries_cli(self, queries, source=("-j", EXPECTED / "db.json")):
+        (self.tmp / "out").mkdir()
+        proc = run_cli([*source, "-q", self.write_queries(queries), "-r", self.tmp / "out"], self.tmp)
+        self.assertCleanExit(proc, 0)
+        return self.response()
+
+    def test_exact_match_and_filters(self):
+        queries = [
+            {"origin": "LHR", "destination": "JFK"},
+            {"price": 200.00},
+            {"departure_datetime": "2025-11-15 00:00", "arrival_datetime": "2025-11-16 00:00"},
+            {"destination": "RIX"},
+            {"arrival_datetime": "2025-11-14 13:05"},
+            {"departure_datetime": "2025-11-20 21:10"},
+            {"flight_id": "ba2490"},
+            {},
+        ]
+        expected = [
+            ["BA2490"],
+            ["LH172", "FR1234", "BT102", "DY4501"],
+            ["FR1234"],
+            ["LH172"],
+            ["BA2490", "LH172", "BT102"],
+            ["DY4501", "AF112"],
+            [],
+            ["BA2490", "LH172", "FR1234", "BT102", "AA9999", "DY4501", "AF112"],
+        ]
+        result = self.run_queries_cli(queries)
+        self.assertEqual(len(result), len(queries))
+        for q, entry, exp in zip(queries, result, expected):
+            with self.subTest(query=q):
+                self.assertEqual(entry["query"], q)
+                self.assertEqual(ids(entry["matches"]), exp)
+                self.assertNotIn("error", entry)
+
+    def test_single_query_object(self):
+        result = self.run_queries_cli({"origin": "RIX"})
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(ids(result[0]["matches"]), ["FR1234", "BT102"])
+
+    def test_parse_and_query_in_one_run(self):
+        result = self.run_queries_cli([{"origin": "LHR"}], source=("-i", DB_CSV, "-a", AIRPORTS, "-o", self.tmp / "db.json"))
+        self.assertEqual(result[0]["matches"], [read_json(EXPECTED / "db.json")[0]])
+
+    def test_run_query_function(self):
+        run_query = load_module("query").run_query
+        db = read_json(EXPECTED / "db.json")
+        entry = run_query(db, {"origin": "OSL"})
+        self.assertEqual(entry, {"query": {"origin": "OSL"}, "matches": [db[5]]})
+
+
+# ---------------------------------------------------------------- G. Extended queries
+
+class G_ExtendedQueries(unittest.TestCase):
+    def setUp(self):
+        self.db = read_json(EXPECTED / "db.json")
+        self.run_queries = load_module("query").run_queries
+
+    def test_extended_queries(self):
+        cases = [
+            ({"min_price": 100, "price": 500}, ["BA2490", "LH172", "BT102"]),
+            ({"sort_by": "departure_datetime"}, ["LH172", "BT102", "BA2490", "FR1234", "AA9999", "AF112", "DY4501"]),
+            ({"origin": "RIX", "sort_by": "price"}, ["FR1234", "BT102"]),
+            ({"sort_by": "origin"}, ["AF112", "LH172", "AA9999", "BA2490", "DY4501", "FR1234", "BT102"]),
+            ({"sort_by": "origin", "order": "desc"}, ["FR1234", "BT102", "DY4501", "BA2490", "AA9999", "LH172", "AF112"]),
+            ({"sort_by": "price", "limit": 3}, ["DY4501", "FR1234", "BT102"]),
+            ({"limit": 0}, []),
+        ]
+        result = self.run_queries(self.db, [q for q, _ in cases])
+        for (q, exp), entry in zip(cases, result):
+            with self.subTest(query=q):
+                self.assertNotIn("error", entry)
+                self.assertEqual(ids(entry["matches"]), exp)
+
+    def test_invalid_queries(self):
+        invalid = [
+            {"destination": "XYZ", "colour": "red"},
+            {"order": "desc"},
+            {"sort_by": "colour"},
+            {"sort_by": "price", "order": "up"},
+            {"price": True},
+            {"price": "200"},
+            {"limit": -1},
+            {"limit": 1.5},
+            {"departure_datetime": "2025-11-15"},
+            {"origin": 123},
+        ]
+        for q, entry in zip(invalid, self.run_queries(self.db, invalid)):
+            with self.subTest(query=q):
+                self.assertEqual(entry, {"query": q, "error": "INVALID_QUERY", "matches": []})
+
+
+# ---------------------------------------------------------------- H. Response file
+
+class H_ResponseFile(TempDirTest):
+    def test_sample_response_file(self):
+        fp = load_module("flight_parser")
+        proc = run_cli(["-j", EXPECTED / "db.json", "-q", DATA / "query.json", "-r", self.tmp], self.tmp)
+        self.assertCleanExit(proc, 0)
+        files = [p.name for p in self.tmp.iterdir()]
+        self.assertEqual(len(files), 1, f"expected exactly one file in the -r folder, found {files}")
+        pattern = rf"response_{re.escape(fp.STUDENT_ID)}_{re.escape(fp.FIRST_NAME)}_{re.escape(fp.LAST_NAME)}_\d{{8}}_\d{{4}}\.json"
+        self.assertRegex(files[0], f"^{pattern}$")
+        self.assertEqual(read_json(self.tmp / files[0]), read_json(EXPECTED / "query_response.json"))
+
+    def test_default_response_folder(self):
+        proc = run_cli(["-j", EXPECTED / "db.json", "-q", DATA / "query.json"], self.tmp)
+        self.assertCleanExit(proc, 0)
+        self.assertEqual(len(list(self.tmp.glob("response_*.json"))), 1,
+                         "without -r, the response file goes to the current directory")
+
+
+# ---------------------------------------------------------------- runner
+
+class TallyResult(unittest.TextTestResult):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.passed = []
+
+    def addSuccess(self, test):
+        super().addSuccess(test)
+        self.passed.append(test)
+
+
+def main():
+    os.chdir(ROOT)
+    suite = unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__])
+    totals, passed = {}, {}
+    for test in suite_tests(suite):
+        group = type(test).__name__
+        totals[group] = totals.get(group, 0) + 1
+
+    runner = unittest.TextTestRunner(verbosity=2, resultclass=TallyResult)
+    result = runner.run(suite)
+
+    for test in result.passed:
+        group = type(test).__name__
+        passed[group] = passed.get(group, 0) + 1
+    labels = {
+        "A_Structure": "A. Structure", "B_RowValidation": "B. Row validation",
+        "C_ParsingAFile": "C. Parsing a file", "D_CliAndFolders": "D. CLI and folders",
+        "E_Duplicates": "E. Duplicates", "F_BasicQueries": "F. Basic queries",
+        "G_ExtendedQueries": "G. Extended queries", "H_ResponseFile": "H. Response file",
+    }
+    print("\nSummary by grading group")
+    for group in sorted(totals):
+        print(f"  {labels.get(group, group):<24} {passed.get(group, 0)}/{totals[group]} tests passed")
+    print("\nReminder: the final grade uses a larger hidden test set with different data.")
+    return 0 if result.wasSuccessful() else 1
+
+
+def suite_tests(suite):
+    for item in suite:
+        if isinstance(item, unittest.TestSuite):
+            yield from suite_tests(item)
+        else:
+            yield item
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+=== validator.py ===
+"""Row validation: airport list loading, single-row checks, record building."""
+
+
+def load_airports(path: str) -> set[str]:
+    """Read an airport list file and return the set of codes.
+
+    One code per line. Strip whitespace; skip blank lines and lines
+    starting with '#'.
+    """
+    raise NotImplementedError
+
+
+def validate_row(fields: list[str], airports: set[str]) -> str | None:
+    """Check one CSV row (fields as returned by csv.reader, not yet stripped).
+
+    Return None if the row is valid, otherwise the error code of the
+    FIRST failing check (checks 1-11 in the specification, in order).
+    Does not check for duplicates.
+    """
+    raise NotImplementedError
+
+
+def to_record(fields: list[str]) -> dict:
+    """Turn a valid row into a flight record dictionary.
+
+    Keys: flight_id, origin, destination, departure_datetime,
+    arrival_datetime (stripped strings) and price (float).
+    """
+    raise NotImplementedError
+
+
